@@ -1,9 +1,11 @@
 import h5py
 import argparse
 from glob import glob
-import os
+import traceback
+import numpy as np
 
 detector_list = range(7)
+group_start_id = 0
 
 skippable_tags = ['SRCURRENT', 'US_IC', 'DS_IC', 'ELT1', 'ELT2', 'ELT3', 'ELT4', 
                   'ERT1', 'ERT2', 'ERT3', 'ERT4', 'ICR1', 'ICR2', 'ICR3', 'ICR4',
@@ -16,53 +18,78 @@ skippable_tags = ['SRCURRENT', 'US_IC', 'DS_IC', 'ELT1', 'ELT2', 'ELT3', 'ELT4',
                   'COHERENT_SCT_ENERGY_MIN', 'COMPTON_ANGLE_MAX', 'COMPTON_ANGLE_MIN', 'DETECTOR_MATERIAL',
                   'FIT_SNIP_WIDTH', 'BE_WINDOW_THICKNESS', 'DET_CHIP_THICKNESS', 'GE_DEAD_LAYER',  'MAX_ENERGY_TO_FIT',
                   'MIN_ENERGY_TO_FIT', 'GE_ESCAPE_FACTOR', 'GE_ESCAPE_ENABLE', 'DPC1_IC', 'DPC2_IC',
-                   'CFG_1', 'CFG_2', 'CFG_3', 'CFG_4', 'CFG_5', 'CFG_6', 'CFG_7', 'CFG_8', 'CFG_9' ]
+                   'CFG_1', 'CFG_2', 'CFG_3', 'CFG_4', 'CFG_5', 'CFG_6', 'CFG_7', 'CFG_8', 'CFG_9', 'THETA_PV',
+                    'TIME_SCALER_PV', 'TIME_SCALER_CLOCK', 'TIME_NORMALIZED_SCALER' ]
+
+good_tags = ['VERSION', 'ELEMENTS_TO_FIT', 'ELEMENTS_WITH_PILEUP', 'DETECTOR_ELEMENTS', 'CAL_OFFSET_[E_OFFSET]', 'CAL_SLOPE_[E_LINEAR]', 'CAL_QUAD_[E_QUADRATIC]', 'FWHM_OFFSET', 'FWHM_FANOPRIME',
+         'COHERENT_SCT_ENERGY', 'COMPTON_ANGLE', 'COMPTON_FWHM_CORR', 'COMPTON_STEP', 'COMPTON_F_TAIL', 'COMPTON_GAMMA', 'COMPTON_HI_F_TAIL',
+        'COMPTON_HI_GAMMA', 'STEP_OFFSET', 'STEP_LINEAR', 'STEP_QUADRATIC', 'F_TAIL_OFFSET', 'F_TAIL_LINEAR', 'F_TAIL_QUADRATIC', 'KB_F_TAIL_OFFSET',
+          'KB_F_TAIL_LINEAR', 'KB_F_TAIL_QUADRATIC', 'GAMMA_OFFSET', 'GAMMA_LINEAR', 'GAMMA_QUADRATIC', 'SNIP_WIDTH', 'SI_ESCAPE_FACTOR',
+        'LINEAR_ESCAPE_FACTOR', 'SI_ESCAPE_ENABLE']
 
 def read_fit_params(fname):
+    global good_tags
     params = dict()
     with open(fname, 'r') as f:
         lines = f.readlines()
     for i in lines:
         tags = i.split(':')
         if len(tags) > 1:
-            is_comment = tags[0][0] == ' ' or tags[0][0] == '\t'
-            if False == is_comment:
-                if tags[0] in skippable_tags:
-                    continue
-                elif tags[0] == 'ELEMENTS_TO_FIT' or tags[0] == 'ELEMENTS_WITH_PILEUP':
+            if tags[0] in good_tags:
+                if tags[0] == 'ELEMENTS_TO_FIT' or tags[0] == 'ELEMENTS_WITH_PILEUP':
                     params[tags[0]] = tags[1].strip('\n')
                 else:
                     params[tags[0]] = float(tags[1].strip('\n'))
+    if 'ELEMENTS_TO_FIT' not in params:
+        params = None
     return params
 
 def read_int_spec(h5name):
     int_spec = None
     with h5py.File(h5name, 'r') as f:
         # try to see if v10 layout, Non Negative Lease squares fitting tech was used
-        h5_counts = f['/MAPS/XRF_Analyzed/NNLS/Counts_Per_Sec']
-        h5_channel_names = f['/MAPS/XRF_Analyzed/NNLS/Channel_Names']
-        if h5_counts is None:
-            # try to see if v10 layout, iterative matrix fitting tech was used
-            h5_counts = f['/MAPS/XRF_Analyzed/Fitted/Counts_Per_Sec']
-            h5_channel_names = f['/MAPS/XRF_Analyzed/Fitted/Channel_Names']
-            if h5_counts is None:
-                # try to see if was saved in v9 layout
-                h5_counts = f['/MAPS/XRF_fits']
-                h5_channel_names = f['/MAPS/channel_names']
-        if h5_counts != None:
-            counts = h5_counts[...]
-            channel_names = h5_channel_names[...]
-    return (counts, channel_names)
+        if '/MAPS/int_spec' in f:
+            int_spec = f['/MAPS/int_spec'][...]
+        elif '/MAPS/Spectra/Integrated_Spectra/Spectra' in f:
+            int_spec = f['/MAPS/Spectra/Integrated_Spectra/Spectra'][...]
+    if int_spec is not None:
+        # don't use spec that are all 0's
+        if int_spec.sum() == 0:
+            return None
+        # don't support spec > 2048
+        spec_len = len(int_spec)
+        if spec_len > 2048:
+            return None
+        if spec_len < 2048:
+            amt = 2048 - spec_len
+            int_spec = np.append(int_spec, np.zeros(amt))
+    return int_spec
 
-def write_int_spec_and_fp(h5_f, int_spec, fp):
-    pass
+def write_fit_params(h5_f, fp):
+    '''
+    Writes fit parameters (fp) to an hdf5 group and returns group id
+    '''
+    global group_start_id
+    grp = h5_f.create_group(f'entry_{group_start_id:06}')
+    group_start_id += 1
+    # create  datawset for fit parameters
+    grp.create_dataset("elements", data=fp['ELEMENTS_TO_FIT'])
+    if 'ELEMENTS_WITH_PILEUP' in fp:
+        grp.create_dataset("pileups", data=fp['ELEMENTS_WITH_PILEUP'])
+    # remove elements and pileups
+    del fp['ELEMENTS_TO_FIT']
+    del fp['ELEMENTS_WITH_PILEUP']
+    grp.create_dataset("fit_param_names", data=list(fp.keys()))
+    grp.create_dataset("fit_param_values", data=list(fp.values()))
+    return grp
 
 def proc_dir(indir, outfile):
     try:
         # process directory
+        print (f'Processing: {indir}')
         override_files = glob(indir+"/maps_fit_parameters_override.txt*", recursive = False)
         for over in override_files:
-            last = over[len(over-1)]
+            last = over[len(over)-1]
             detector = ''
             try:
                 if last == 't':
@@ -73,18 +100,27 @@ def proc_dir(indir, outfile):
             except:
                 print('Failed to parse detector for override file '+over)
             fit_params = read_fit_params(over)
-            h5_files = glob(indir + '/img.dat/*.h5'+detector)
-            for h5 in h5_files:
-                int_spec = read_int_spec(h5)
+            if fit_params is not None:
+                # write fit params to group
+                int_specs = []
+                h5_files = glob(indir + '/img.dat/*.h5'+detector)
+                for h5 in h5_files:
+                    int_spec = read_int_spec(h5)
+                    if int_spec is not None:
+                        int_specs += [int_spec]
+                if len(int_specs) > 0:
+                    grp = write_fit_params(outfile, fit_params)
+                    grp.create_dataset('int_spectra', data=int_specs, compression="gzip", compression_opts=9)
     except Exception as e:
+        traceback.print_exc()
         print (e)
 
 def recur_scan_dir(indir, outfile):
     dir_list = glob(indir+"/**/", recursive = False)
-    print (dir_list)
+    #print (dir_list)
     # search 
     img_dat_dir = list(i for i in dir_list if i.find('img.dat') > 1)
-    if len(img_dat_dir > 0):
+    if len(img_dat_dir) > 0:
         proc_dir(indir, outfile)
     else:
         for i in dir_list:
@@ -99,14 +135,14 @@ def main():
     if args.i == None or args.o == None:
         print("Please use -i for input directory and -o for output filename")
         return -1
-    '''
-    with h5py.File(args.of, 'w') as outfile:
+    # open out file and scan in dir
+    with h5py.File(args.o, 'w') as outfile:
         if outfile == None:
-            print('Error opening ',args.of, 'for writing to.')
+            print('Error opening ',args.o, 'for writing to.')
             return -2
    
         recur_scan_dir(args.i, outfile)
-    '''
+    
     return 0
 
 if __name__ == '__main__':
