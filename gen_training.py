@@ -4,7 +4,6 @@ from glob import glob
 import traceback
 import numpy as np
 
-detector_list = range(7)
 group_start_id = 0
 
 skippable_tags = ['SRCURRENT', 'US_IC', 'DS_IC', 'ELT1', 'ELT2', 'ELT3', 'ELT4', 
@@ -83,7 +82,7 @@ def write_fit_params(h5_f, fp):
     grp.create_dataset("fit_param_values", data=list(fp.values()))
     return grp
 
-def proc_dir(indir, outfile):
+def proc_dir(indir, outfile, ignore_avg):
     try:
         # process directory
         print (f'Processing: {indir}')
@@ -99,6 +98,8 @@ def proc_dir(indir, outfile):
                     detector = last
             except:
                 print('Failed to parse detector for override file '+over)
+            if ignore_avg and detector == '':
+                continue
             fit_params = read_fit_params(over)
             if fit_params is not None:
                 # write fit params to group
@@ -115,23 +116,24 @@ def proc_dir(indir, outfile):
         traceback.print_exc()
         print (e)
 
-def recur_scan_dir(indir, outfile):
+def recur_scan_dir(indir, outfile, ignore_avg):
     dir_list = glob(indir+"/**/", recursive = False)
     #print (dir_list)
     # search 
     img_dat_dir = list(i for i in dir_list if i.find('img.dat') > 1)
     if len(img_dat_dir) > 0:
-        proc_dir(indir, outfile)
+        proc_dir(indir, outfile, ignore_avg)
     else:
         for i in dir_list:
-            recur_scan_dir(i, outfile)
+            recur_scan_dir(i, outfile, ignore_avg)
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('-i', type=str,  help='Input directory to iterate over')
-    parser.add_argument('-o', type=str,  help='Output filename, hdf5 ')
+    parser.add_argument('-i', type=str,  help='Input directory to iterate over.')
+    parser.add_argument('-o', type=str,  help='Output filename, hdf5.')
+    parser.add_argument('--ignore_avg', action=argparse.BooleanOptionalAction,  help='Ignore Avg h5 and only parse detector.')
     args = parser.parse_args()
-    print(args.i, args.o)
+    print(args.i, args.o, args.ignore_avg)
     if args.i == None or args.o == None:
         print("Please use -i for input directory and -o for output filename")
         return -1
@@ -140,9 +142,7 @@ def main():
         if outfile == None:
             print('Error opening ',args.o, 'for writing to.')
             return -2
-   
-        recur_scan_dir(args.i, outfile)
-    
+        recur_scan_dir(args.i, outfile, args.ignore_avg)
     return 0
 
 if __name__ == '__main__':
