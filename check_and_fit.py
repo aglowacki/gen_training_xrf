@@ -40,6 +40,7 @@ def fit_spec(fit_rout, model, grp):
     print(grp.name)
     # Load fit parameters 
     po = px.ParamsOverride()
+    trans = px.io.file.get_FILE_TAGS_TRANSLATION()
     elements_to_fit = dict()
     s = grp['elements'][()]
     s = s.decode()
@@ -49,6 +50,8 @@ def fit_spec(fit_rout, model, grp):
     param_names = grp['fit_param_names'][...]
     param_values = grp['fit_param_values'][...]
     for name, value in zip(param_names, param_values):
+        if name.decode() in trans:
+            name = trans[name.decode()]
         po.fit_params.add_parameter(px.Fit_Param(name, value))
     # Load dataset
     int_specs = grp['int_spectra']
