@@ -1,5 +1,5 @@
-import pyxrfmaps as px 
 import h5py
+import pyxrfmaps as px 
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
