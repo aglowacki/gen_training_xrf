@@ -106,9 +106,12 @@ def proc_dir(indir, outfile, ignore_avg):
                 int_specs = []
                 h5_files = glob(indir + '/img.dat/*.h5'+detector)
                 for h5 in h5_files:
-                    int_spec = read_int_spec(h5)
-                    if int_spec is not None:
-                        int_specs += [int_spec]
+                    try:
+                        int_spec = read_int_spec(h5)
+                        if int_spec is not None:
+                            int_specs += [int_spec]
+                    except:
+                        print('Error opening ',h5)
                 if len(int_specs) > 0:
                     grp = write_fit_params(outfile, fit_params)
                     grp.create_dataset('int_spectra', data=int_specs, compression="gzip", compression_opts=9)
