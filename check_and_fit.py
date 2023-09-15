@@ -45,8 +45,8 @@ def fit_spec(fit_rout, model, grp):
     trans = px.io.file.get_FILE_TAGS_TRANSLATION()
     s = grp['elements'][()]
     s = s.decode()
-    el_list = s.split(',')
-    po.elements_to_fit = po.fill_elements_from_dict(el_list, 'Si')
+    el_list = [i.strip() for i in s.split(',')]
+    po.fill_elements_from_dict(el_list, 'Si')
     param_names = grp['fit_param_names'][...]
     param_values = grp['fit_param_values'][...]
     for name, value in zip(param_names, param_values):
