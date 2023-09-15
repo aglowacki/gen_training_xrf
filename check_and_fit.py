@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 
-element_csv_filename = "reference/xrf_library.csv"
-element_henke_filename = "reference/henke.xdr"
+element_csv_filename = "../reference/xrf_library.csv"
+element_henke_filename = "../reference/henke.xdr"
 
 def plot_results(name, idx, int_spec, fit_spec):
     i_ax = np.linspace(0,int_spec.size-1, int_spec.size)
