@@ -35,8 +35,8 @@ def plot_results(name, idx, int_spec, fit_spec):
     ffdiff = fft_spec - fft_fit_spec
     axs[1,2].plot(freq, ffdiff.real**2+ ffdiff.imag**2)
     '''
-    print(f"gen_training_xrf/output/{name}_{idx}.png")
-    plt.savefig(f"gen_training_xrf/output/{name}_{idx}.png")
+    print(f"/gen_training_xrf/output/{name}_{idx}.png")
+    plt.savefig(f"/gen_training_xrf/output/{name}_{idx}.png")
 
 def fit_spec(fit_rout, model, grp):
     print(grp.name)
