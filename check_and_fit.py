@@ -69,12 +69,14 @@ def fit_spec(fit_rout, model, grp):
         model.update_fit_params_values(po.fit_params)
         fit_rout.initialize(model, po.elements_to_fit, energy_range)
         # Fit element counts
-        counts = fit_rout.fit_counts(model, spectra, po.elements_to_fit)
-        print(counts)
+        #counts = fit_rout.fit_counts(model, spectra, po.elements_to_fit)
+        #print(counts)
         # Get Fit Spectra 
         fit_spec = fit_rout.fit_spectra(model, spectra, po.elements_to_fit)
         # Resize int_spec to match fit_spec
         spectra = spectra[energy_range.min:energy_range.max+1]
+        max_val = np.amax(spectra)
+        spectra = np.clip(0.1, max_val) 
         # Plot both
         plot_results(grp.name, idx, spectra, fit_spec)
         idx += 1
