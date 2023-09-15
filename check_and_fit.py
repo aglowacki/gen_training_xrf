@@ -10,7 +10,7 @@ element_henke_filename = "../reference/henke.xdr"
 def plot_results(name, idx, int_spec, fit_spec):
     i_ax = np.linspace(0,int_spec.size-1, int_spec.size)
     f_ax = np.linspace(0,fit_spec.size-1, fit_spec.size)
-    fig, axs = plt.subplots(1,1)
+    fig, axs = plt.subplots(2,1)
     axs[0].plot(i_ax, int_spec)
     #axs[1,0].plot(i_ax, int_spec)
     axs[0].set_yscale('log')
@@ -20,17 +20,18 @@ def plot_results(name, idx, int_spec, fit_spec):
     axs[0,2].plot(freq, fft_spec.real**2 + fft_spec.imag**2)
     '''
     axs[0].plot(f_ax, fit_spec)
-    #axs[0,1].plot(f_ax, fit_spec)
+    axs[0].plot(f_ax, fit_spec)
     #axs[0,1].set_yscale('log')
-    '''
-    fft_fit_spec = np.fft.fft(fit_spec)
-    axs[0,2].plot(freq, fft_fit_spec.real**2 + fft_fit_spec.imag**2)
+    #
+    #fft_fit_spec = np.fft.fft(fit_spec)
+    #axs[0,2].plot(freq, fft_fit_spec.real**2 + fft_fit_spec.imag**2)
     
     diff_spec = np.abs(int_spec - fit_spec)
-    axs[1,0].plot(i_ax, diff_spec)
-    axs[1,1].plot(i_ax, diff_spec)
-    axs[1,1].set_yscale('log')
+    axs[1].plot(i_ax, diff_spec)
+    axs[1].plot(i_ax, diff_spec)
+    axs[1].set_yscale('log')
     #print(fft_fit_spec.imag)
+    '''
     ffdiff = fft_spec - fft_fit_spec
     axs[1,2].plot(freq, ffdiff.real**2+ ffdiff.imag**2)
     '''
