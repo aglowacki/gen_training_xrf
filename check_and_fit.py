@@ -76,7 +76,7 @@ def fit_spec(fit_rout, model, grp):
         # Resize int_spec to match fit_spec
         spectra = spectra[energy_range.min:energy_range.max+1]
         max_val = np.amax(spectra)
-        spectra = np.clip(0.1, max_val) 
+        spectra = np.clip(spectra, 0.1, max_val) 
         # Plot both
         plot_results(grp.name, idx, spectra, fit_spec)
         idx += 1
