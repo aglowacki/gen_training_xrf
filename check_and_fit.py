@@ -38,17 +38,19 @@ def plot_results(name, idx, int_spec, fit_spec):
 
 def fit_spec(fit_rout, model, grp):
     print(grp.name)
+    el_info = px.ElementInfoMap.inst()
     # Load fit parameters 
     po = px.ParamsOverride()
     trans = px.io.file.get_FILE_TAGS_TRANSLATION()
     s = grp['elements'][()]
     s = s.decode()
-    detector_element =  px.ElementInfoMap.inst().get_element("Si")
+    detector_element = el_info.get_element("Si")
     for e in s.split(','):
         element_name = e.strip()
-        element_info =  px.ElementInfoMap.inst().get_element(element_name)
+        print(element_name)
+        element_info =  el_info.get_element(element_name)
         fit_element_map = px.Fit_Element_Map(element_name, element_info)
-        fit_element_map.init_energy_ratio_for_detector_element(detector_element)
+        fit_element_map.init_energy_ratio_for_detector_element(detector_element, False, False)
         po.elements_to_fit[element_name] = fit_element_map
     param_names = grp['fit_param_names'][...]
     param_values = grp['fit_param_values'][...]
