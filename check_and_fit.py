@@ -74,7 +74,7 @@ def fit_spec(fit_rout, model, grp):
         # Get Fit Spectra 
         fit_spec = fit_rout.fit_spectra(model, spectra, po.elements_to_fit)
         max_val = np.amax(fit_spec)
-        spectra = np.clip(fit_spec, 0.1, max_val)
+        fit_spec = np.clip(fit_spec, 0.1, max_val)
         # Resize int_spec to match fit_spec
         spectra = spectra[energy_range.min:energy_range.max+1]
         max_val = np.amax(spectra)
