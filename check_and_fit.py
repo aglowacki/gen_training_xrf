@@ -58,7 +58,7 @@ def fit_spec(fit_rout, model, grp):
     idx = 0
     po.fit_params.print()
     for spectra in int_specs:
-        # Initialize model and fit routine with fit parameters
+        spectra = np.array(spectra, dtype='f')        # Initialize model and fit routine with fit parameters
         energy_range = px.get_energy_range(spectra.size, po.fit_params)
         model.update_fit_params_values(po.fit_params)
         fit_rout.initialize(model, po.elements_to_fit, energy_range)
