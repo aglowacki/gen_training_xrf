@@ -35,24 +35,18 @@ def plot_results(name, idx, int_spec, fit_spec):
     ffdiff = fft_spec - fft_fit_spec
     axs[1,2].plot(freq, ffdiff.real**2+ ffdiff.imag**2)
     '''
-    print(f"{name}_{idx}.png")
-    plt.savefig(f"{name}_{idx}.png")
+    print(f"gen_training_xrf/output/{name}_{idx}.png")
+    plt.savefig(f"gen_training_xrf/output/{name}_{idx}.png")
 
 def fit_spec(fit_rout, model, grp):
     print(grp.name)
-    el_info = px.ElementInfoMap.inst()
     # Load fit parameters 
     po = px.ParamsOverride()
     trans = px.io.file.get_FILE_TAGS_TRANSLATION()
     s = grp['elements'][()]
     s = s.decode()
-    detector_element = el_info.get_element("Si")
-    for e in s.split(','):
-        element_name = e.strip()
-        element_info =  el_info.get_element(element_name)
-        fit_element_map = px.Fit_Element_Map(element_name, element_info)
-        fit_element_map.init_energy_ratio_for_detector_element(detector_element, False, False)
-        po.elements_to_fit[element_name] = fit_element_map
+    el_list = s.split(',')
+    po.elements_to_fit = po.fill_elements_from_dict(el_list, 'Si')
     param_names = grp['fit_param_names'][...]
     param_values = grp['fit_param_values'][...]
     for name, value in zip(param_names, param_values):
