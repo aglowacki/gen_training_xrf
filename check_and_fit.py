@@ -63,10 +63,11 @@ def fit_spec(fit_rout, model, grp):
     int_specs = grp['int_spectra']
     idx = 0
     po.fit_params.print()
+    # Initialize model and fit routine with fit parameters
+    model.update_fit_params_values(po.fit_params)
     for spectra in int_specs:
-        #spectra = np.array(spectra)        # Initialize model and fit routine with fit parameters
+        #spectra = np.array(spectra)
         energy_range = px.get_energy_range(spectra.size, po.fit_params)
-        model.update_fit_params_values(po.fit_params)
         fit_rout.initialize(model, po.elements_to_fit, energy_range)
         # Fit element counts
         #counts = fit_rout.fit_counts(model, spectra, po.elements_to_fit)
