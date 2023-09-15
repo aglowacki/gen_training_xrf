@@ -14,15 +14,15 @@ def plot_results(name, idx, int_spec, fit_spec):
     axs[0,0].plot(i_ax, int_spec)
     axs[0,1].plot(i_ax, int_spec)
     axs[0,1].set_yscale('log')
-    
+    '''
     fft_spec = np.fft.fft(int_spec)
     freq = np.fft.fftfreq(fft_spec.size)
     axs[0,2].plot(freq, fft_spec.real**2 + fft_spec.imag**2)
-    
+    '''
     axs[0,0].plot(f_ax, fit_spec)
     axs[0,1].plot(f_ax, fit_spec)
     #axs[0,1].set_yscale('log')
-    
+    '''
     fft_fit_spec = np.fft.fft(fit_spec)
     axs[0,2].plot(freq, fft_fit_spec.real**2 + fft_fit_spec.imag**2)
     
@@ -33,7 +33,7 @@ def plot_results(name, idx, int_spec, fit_spec):
     #print(fft_fit_spec.imag)
     ffdiff = fft_spec - fft_fit_spec
     axs[1,2].plot(freq, ffdiff.real**2+ ffdiff.imag**2)
-
+    '''
     print(f"{name}_{idx}.png")
     plt.savefig(f"{name}_{idx}.png")
 
