@@ -46,6 +46,7 @@ def fit_spec(fit_rout, model, grp):
     s = grp['elements'][()]
     s = s.decode()
     el_list = [i.strip() for i in s.split(',')]
+    el_list += ['COMPTON_AMPLITUDE', 'COHERENT_SCT_AMPLITUDE']
     po.fill_elements_from_dict(el_list, 'Si')
     param_names = grp['fit_param_names'][...]
     param_values = grp['fit_param_values'][...]
