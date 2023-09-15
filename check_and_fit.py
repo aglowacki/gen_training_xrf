@@ -34,6 +34,7 @@ def plot_results(name, idx, int_spec, fit_spec):
     ffdiff = fft_spec - fft_fit_spec
     axs[1,2].plot(freq, ffdiff.real**2+ ffdiff.imag**2)
 
+    print(f"{name}_{idx}.png")
     plt.savefig(f"{name}_{idx}.png")
 
 def fit_spec(fit_rout, model, grp):
@@ -47,7 +48,6 @@ def fit_spec(fit_rout, model, grp):
     detector_element = el_info.get_element("Si")
     for e in s.split(','):
         element_name = e.strip()
-        print(element_name)
         element_info =  el_info.get_element(element_name)
         fit_element_map = px.Fit_Element_Map(element_name, element_info)
         fit_element_map.init_energy_ratio_for_detector_element(detector_element, False, False)
