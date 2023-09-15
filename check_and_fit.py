@@ -41,12 +41,15 @@ def fit_spec(fit_rout, model, grp):
     # Load fit parameters 
     po = px.ParamsOverride()
     trans = px.io.file.get_FILE_TAGS_TRANSLATION()
-    elements_to_fit = dict()
     s = grp['elements'][()]
     s = s.decode()
+    detector_element =  px.ElementInfoMap.inst().get_element("Si")
     for e in s.split(','):
-        elements_to_fit[e.strip()] = 0.
-    #po.elements_to_fit(elements_to_fit)
+        element_name = e.strip()
+        element_info =  px.ElementInfoMap.inst().get_element(element_name)
+        fit_element_map = px.Fit_Element_Map(element_name, element_info)
+        fit_element_map.init_energy_ratio_for_detector_element(detector_element)
+        po.elements_to_fit[element_name] = fit_element_map
     param_names = grp['fit_param_names'][...]
     param_values = grp['fit_param_values'][...]
     for name, value in zip(param_names, param_values):
@@ -58,15 +61,15 @@ def fit_spec(fit_rout, model, grp):
     idx = 0
     po.fit_params.print()
     for spectra in int_specs:
-        spectra = np.array(spectra, dtype='f')        # Initialize model and fit routine with fit parameters
+        #spectra = np.array(spectra)        # Initialize model and fit routine with fit parameters
         energy_range = px.get_energy_range(spectra.size, po.fit_params)
         model.update_fit_params_values(po.fit_params)
         fit_rout.initialize(model, po.elements_to_fit, energy_range)
         # Fit element counts
-        counts = fit_rout.fit_counts(model, spectra, elements_to_fit)
+        counts = fit_rout.fit_counts(model, spectra, po.elements_to_fit)
         print(counts)
         # Get Fit Spectra 
-        fit_spec = fit_rout.fit_spectra(model, spectra, elements_to_fit)
+        fit_spec = fit_rout.fit_spectra(model, spectra, po.elements_to_fit)
         # Resize int_spec to match fit_spec
         spectra = spectra[energy_range.min:energy_range.max+1]
         # Plot both
