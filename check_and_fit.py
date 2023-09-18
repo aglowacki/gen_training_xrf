@@ -29,14 +29,14 @@ def plot_results(name, idx, int_spec, fit_spec):
     diff_spec = np.abs(int_spec - fit_spec)
     axs[1].plot(i_ax, diff_spec)
     axs[1].plot(i_ax, diff_spec)
-    axs[1].set_yscale('log')
+    #axs[1].set_yscale('log')
     #print(fft_fit_spec.imag)
     '''
     ffdiff = fft_spec - fft_fit_spec
     axs[1,2].plot(freq, ffdiff.real**2+ ffdiff.imag**2)
     '''
     print(f"/gen_training_xrf/output/{name}_{idx}.png")
-    plt.savefig(f"/gen_training_xrf/output/{name}_{idx}.png")
+    plt.savefig(f"/gen_training_xrf/output/{name}_{idx}.png", dpi=300)
 
 def fit_spec(fit_rout, model, grp):
     print(grp.name)
